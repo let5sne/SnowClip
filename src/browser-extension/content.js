@@ -18,10 +18,85 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     copyToClipboard(formatted);
     saveToStorage(formatted);
     sendResponse({ success: true });
+  } else if (request.action === 'toggleElementSelection') {
+    // 如果已经在选择模式，则退出
+    if (isSelecting) {
+      cleanup();
+    } else {
+      // 默认格式或者读取存储的格式? 这里暂时用默认markdown
+      // 理想情况应该从 storage 读取，这里简化处理
+      chrome.storage.local.get('format', (res) => {
+        currentFormat = res.format || 'markdown';
+        startElementSelectionMode();
+      });
+    }
+    sendResponse({ success: true });
   }
   return true;
 });
 
+// === 元素选择模式 ===
+let highlightBox = null;
+let lastTarget = null;
+
+function startElementSelectionMode() {
+  isSelecting = true;
+  
+  // 创建提示
+  const hint = document.createElement('div');
+  hint.className = 'llm-extractor-hint';
+  hint.textContent = '移动鼠标选择元素，点击提取，ESC 取消';
+  document.body.appendChild(hint);
+  
+  // 创建高亮框
+  highlightBox = document.createElement('div');
+  highlightBox.className = 'llm-extractor-element-highlight';
+  highlightBox.style.display = 'none';
+  document.body.appendChild(highlightBox);
+  
+  // 绑定事件
+  document.addEventListener('mousemove', onElementMouseMove, true);
+  document.addEventListener('click', onElementClick, true);
+  document.addEventListener('keydown', onKeyDown);
+}
+
+function onElementMouseMove(e) {
+  if (!isSelecting) return;
+  
+  const target = document.elementFromPoint(e.clientX, e.clientY);
+  
+  if (target && target !== lastTarget && target !== highlightBox && !target.classList.contains('llm-extractor-hint')) {
+    lastTarget = target;
+    
+    const rect = target.getBoundingClientRect();
+    highlightBox.style.display = 'block';
+    highlightBox.style.left = rect.left + 'px';
+    highlightBox.style.top = rect.top + 'px';
+    highlightBox.style.width = rect.width + 'px';
+    highlightBox.style.height = rect.height + 'px';
+  }
+}
+
+function onElementClick(e) {
+  if (!isSelecting) return;
+  
+  e.preventDefault();
+  e.stopPropagation();
+  
+  if (lastTarget) {
+    // 提取内容
+    const content = extractContent(lastTarget);
+    const formatted = formatContent(content, currentFormat);
+    
+    copyToClipboard(formatted);
+    saveToStorage(formatted);
+    showNotification('✅ 元素内容已提取');
+  }
+  
+  cleanup();
+}
+
+// === 框选模式 ===
 // 开始框选模式
 function startSelectionMode() {
   isSelecting = true;
@@ -111,10 +186,16 @@ function onKeyDown(e) {
 
 function cleanup() {
   isSelecting = false;
+  lastTarget = null;
   
   if (selectionBox) {
     selectionBox.remove();
     selectionBox = null;
+  }
+  
+  if (highlightBox) {
+    highlightBox.remove();
+    highlightBox = null;
   }
   
   if (overlay) {
@@ -128,6 +209,10 @@ function cleanup() {
   document.removeEventListener('mousedown', onMouseDown);
   document.removeEventListener('mousemove', onMouseMove);
   document.removeEventListener('mouseup', onMouseUp);
+  
+  document.removeEventListener('mousemove', onElementMouseMove, true);
+  document.removeEventListener('click', onElementClick, true);
+  
   document.removeEventListener('keydown', onKeyDown);
 }
 
