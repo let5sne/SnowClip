@@ -24,7 +24,7 @@
 
 4. **加载扩展**
    - 点击 **加载已解压的扩展程序**
-   - 选择项目中的 `browser-extension` 文件夹
+   - 选择项目中的 `src/browser-extension` 文件夹
 
 5. **完成**
    - 扩展图标会出现在浏览器工具栏
@@ -58,18 +58,17 @@
 ## 文件说明
 
 ```
-browser-extension/
+src/browser-extension/
 ├── manifest.json    # 扩展配置（权限、入口等）
 ├── popup.html       # 弹出窗口界面
 ├── popup.js         # 弹出窗口逻辑
 ├── content.js       # 注入页面的内容脚本
 ├── content.css      # 框选样式
-├── icons/           # 图标文件
-│   ├── icon.svg     # 矢量源文件
-│   ├── icon16.png   # 16x16 图标
-│   ├── icon48.png   # 48x48 图标
-│   └── icon128.png  # 128x128 图标
-└── INSTALL.md       # 本文件
+└── icons/           # 图标文件
+    ├── icon.svg     # 矢量源文件
+    ├── icon16.png   # 16x16 图标
+    ├── icon48.png   # 48x48 图标
+    └── icon128.png  # 128x128 图标
 ```
 
 ## 权限说明

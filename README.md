@@ -6,15 +6,23 @@
 
 ```
 web2mcp/
-├── browser-extension/    # Chrome 浏览器扩展
-│   ├── manifest.json     # 扩展配置
-│   ├── popup.html        # 弹出界面
-│   ├── popup.js          # 弹出逻辑
-│   ├── content.js        # 内容提取脚本
-│   ├── content.css       # 样式
-│   └── icons/            # 图标
-├── mcp.py                # Python 网页抓取脚本
-└── README.md
+├── src/                      # 源代码
+│   └── browser-extension/    # Chrome 浏览器扩展
+│       ├── manifest.json     # 扩展配置
+│       ├── popup.html        # 弹出界面
+│       ├── popup.js          # 弹出逻辑
+│       ├── content.js        # 内容提取脚本
+│       ├── content.css       # 样式
+│       └── icons/            # 图标
+├── docs/                     # 文档
+│   ├── INSTALL.md            # 安装指南
+│   └── EXTENSION.md          # 扩展详细说明
+├── scripts/                  # 工具脚本
+│   ├── mcp.py                # Python 网页抓取脚本
+│   └── generate_icons.py     # 图标生成脚本
+├── README.md
+├── LICENSE
+└── .gitignore
 ```
 
 ## 功能
@@ -33,7 +41,9 @@ web2mcp/
 1. 打开 Chrome，访问 `chrome://extensions/`
 2. 开启右上角 **开发者模式**
 3. 点击 **加载已解压的扩展程序**
-4. 选择 `browser-extension` 文件夹
+4. 选择 `src/browser-extension` 文件夹
+
+详细安装说明请参考 [docs/INSTALL.md](docs/INSTALL.md)
 
 ### Python 脚本
 
