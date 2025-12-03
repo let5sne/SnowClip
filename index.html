@@ -4,11 +4,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="SnowClip 雪花剪藏 - 纯净网页内容提取工具，一键转换为 Markdown、JSON、XML 格式，为 LLM 工作流提供完美语料">
-    <meta name="keywords" content="网页提取,Markdown,LLM,ChatGPT,Claude,内容剪藏,浏览器扩展">
+
+    <!-- Primary SEO Meta Tags -->
+    <title>SnowClip - AI 文档提取工具 | 网页转 Markdown/JSON 为 LLM 提供语料</title>
+    <meta name="title" content="SnowClip - AI 文档提取工具 | 网页转 Markdown/JSON 为 LLM 提供语料">
+    <meta name="description" content="SnowClip 雪花剪藏是一款 Chrome 浏览器扩展，专为 AI 工作流设计。一键提取 API 文档、技术博客、MCP 协议文档等网页内容，智能转换为 Markdown、JSON、XML 格式，完美适配 ChatGPT、Claude、GPT-4 等大语言模型的 Prompt 输入。">
+    <meta name="keywords" content="AI,人工智能,LLM,大语言模型,ChatGPT,Claude,GPT-4,MCP,Model Context Protocol,API文档,技术文档,Markdown,JSON,XML,网页提取,内容剪藏,浏览器扩展,Chrome扩展,Prompt,语料提取,文档转换,网页抓取,Web Scraper,AI工具,开发者工具">
+    <meta name="author" content="SnowClip">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="Chinese">
     <meta name="theme-color" content="#0f172a">
-    <title>SnowClip - 纯净网页内容提取工具</title>
+    <link rel="canonical" href="https://let5sne.github.io/SnowClip/">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://let5sne.github.io/SnowClip/">
+    <meta property="og:title" content="SnowClip - AI 文档提取工具 | 为 LLM 提供完美语料">
+    <meta property="og:description" content="专为 AI 工作流设计的 Chrome 扩展。一键提取 API 文档、MCP 协议文档等网页内容，转换为 Markdown/JSON 格式，适配 ChatGPT、Claude 等大模型。">
+    <meta property="og:image" content="https://let5sne.github.io/SnowClip/docs/images/preview.png">
+    <meta property="og:locale" content="zh_CN">
+    <meta property="og:site_name" content="SnowClip 雪花剪藏">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://let5sne.github.io/SnowClip/">
+    <meta property="twitter:title" content="SnowClip - AI 文档提取工具 | 为 LLM 提供完美语料">
+    <meta property="twitter:description" content="专为 AI 工作流设计的 Chrome 扩展。一键提取 API 文档、MCP 协议文档等网页内容，转换为 Markdown/JSON 格式。">
+    <meta property="twitter:image" content="https://let5sne.github.io/SnowClip/docs/images/preview.png">
+
+    <!-- Structured Data / JSON-LD -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "SnowClip 雪花剪藏",
+        "alternateName": "SnowClip",
+        "description": "专为 AI 工作流设计的网页内容提取工具，支持将 API 文档、技术博客等转换为 Markdown、JSON、XML 格式，适配 ChatGPT、Claude 等大语言模型",
+        "url": "https://let5sne.github.io/SnowClip/",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Chrome",
+        "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "CNY"
+        },
+        "featureList": [
+            "网页内容提取",
+            "Markdown 格式转换",
+            "JSON 结构化输出",
+            "XML 格式支持",
+            "ZIP 图文打包下载",
+            "API 文档提取",
+            "MCP 协议文档支持",
+            "LLM Prompt 语料准备"
+        ],
+        "keywords": "AI, LLM, ChatGPT, Claude, GPT-4, MCP, API文档, Markdown, 网页提取, Chrome扩展",
+        "author": {
+            "@type": "Organization",
+            "name": "SnowClip"
+        },
+        "license": "https://opensource.org/licenses/MIT"
+    }
+    </script>
+
+    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%2394a3b8' d='M12 0L13.5 4.5L18 6L13.5 7.5L12 12L10.5 7.5L6 6L10.5 4.5L12 0Z'/%3E%3C/svg%3E">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -54,10 +116,10 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M12 2L13.5 6.5L18 8L13.5 9.5L12 14L10.5 9.5L6 8L10.5 6.5L12 2Z"/>
                     </svg>
-                    <span>为 LLM 工作流而生</span>
+                    <span>专为 ChatGPT / Claude 等 AI 设计</span>
                 </div>
-                <h1>像雪花一样纯净的<br><span class="highlight">网页内容提取</span></h1>
-                <p class="hero-desc">一键提取网页核心内容，智能转换为 Markdown、JSON 或 XML 格式。去除广告噪音，保留结构化信息。</p>
+                <h1>AI 文档提取神器<br><span class="highlight">API 文档转 Markdown</span></h1>
+                <p class="hero-desc">一键提取 API 文档、MCP 协议文档、技术博客等网页内容，智能转换为 Markdown、JSON 或 XML 格式，为 ChatGPT、Claude、GPT-4 等大语言模型提供完美 Prompt 语料。</p>
                 <div class="hero-buttons">
                     <a href="https://github.com/let5sne/SnowClip/releases/latest" class="btn btn-primary" target="_blank" rel="noopener">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -137,8 +199,8 @@
         <div class="container">
             <div class="section-header">
                 <span class="section-tag">核心功能</span>
-                <h2>精准、纯净、高效</h2>
-                <p>专为 AI 工作流设计的内容提取工具</p>
+                <h2>为 LLM 打造的文档提取工具</h2>
+                <p>轻松提取 API 文档、MCP 协议文档、技术博客，转为 AI 友好格式</p>
             </div>
             <div class="feature-grid">
                 <div class="feature-card">
@@ -149,8 +211,8 @@
                             <path d="M12 2v4M12 18v4M2 12h4M18 12h4"/>
                         </svg>
                     </div>
-                    <h3>精准提取</h3>
-                    <p>支持「框选区域」和「整页提取」两种模式，智能识别正文、代码块和表格，自动过滤广告和导航干扰。</p>
+                    <h3>API 文档精准提取</h3>
+                    <p>支持「框选区域」和「整页提取」两种模式，智能识别 API 文档、代码示例和参数表格，自动过滤广告干扰。</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -160,8 +222,8 @@
                             <path d="M8 13h8M8 17h5"/>
                         </svg>
                     </div>
-                    <h3>多格式输出</h3>
-                    <p>完美支持 Markdown、JSON、XML 格式，直接适配 ChatGPT、Claude 等大语言模型的输入需求。</p>
+                    <h3>LLM 友好格式</h3>
+                    <p>输出 Markdown、JSON、XML 格式，直接作为 ChatGPT、Claude、GPT-4 的 Prompt 输入，无需二次处理。</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -171,8 +233,8 @@
                             <path d="M21 15l-5-5L5 21"/>
                         </svg>
                     </div>
-                    <h3>图文打包</h3>
-                    <p>支持导出 ZIP 压缩包，包含 Markdown 文件和本地化图片，完整保留上下文信息。</p>
+                    <h3>多模态 AI 友好</h3>
+                    <p>ZIP 打包功能完整保留图文关系，支持 GPT-4V、Claude Vision 等多模态 LLM 的上下文输入需求。</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
@@ -182,8 +244,8 @@
                             <path d="M2 10h20"/>
                         </svg>
                     </div>
-                    <h3>快捷键支持</h3>
-                    <p>使用 <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> 快速激活元素选择模式，移动鼠标即可高亮并提取。</p>
+                    <h3>AI 工作流加速</h3>
+                    <p>快捷键 <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> 一键激活，秒速提取 MCP Server 文档、SDK 指南，加速 AI Agent 开发。</p>
                 </div>
             </div>
         </div>
@@ -193,15 +255,15 @@
         <div class="container">
             <div class="section-header">
                 <span class="section-tag">使用指南</span>
-                <h2>三步开始使用</h2>
-                <p>离线安装，无需商店审核</p>
+                <h2>三步搭建 AI 文档工作流</h2>
+                <p>离线安装 Chrome 扩展，开始为 ChatGPT、Claude 准备语料</p>
             </div>
             <div class="steps-grid">
                 <div class="step-card">
                     <div class="step-number">01</div>
                     <div class="step-content">
-                        <h3>下载源码</h3>
-                        <p>从 GitHub 下载或克隆本项目代码到本地</p>
+                        <h3>下载 AI 文档工具</h3>
+                        <p>从 GitHub 下载或克隆 SnowClip 源码，获取这款 LLM 语料提取利器</p>
                         <code>git clone https://github.com/let5sne/SnowClip.git</code>
                     </div>
                 </div>
@@ -221,7 +283,7 @@
                 </div>
             </div>
             <div class="usage-tips">
-                <h4>使用方式</h4>
+                <h4>AI 语料提取方式</h4>
                 <div class="tips-grid">
                     <div class="tip-item">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -229,8 +291,8 @@
                             <path d="M9 9h6v6H9z"/>
                         </svg>
                         <div>
-                            <strong>框选提取</strong>
-                            <span>点击扩展图标 → 选择格式 → 点击「框选区域提取」→ 拖拽选择</span>
+                            <strong>精准框选 API 文档</strong>
+                            <span>拖拽选择 API 参数表格、代码示例，转为 LLM 友好的 Markdown</span>
                         </div>
                     </div>
                     <div class="tip-item">
@@ -239,8 +301,8 @@
                             <path d="M14 2v6h6"/>
                         </svg>
                         <div>
-                            <strong>整页提取</strong>
-                            <span>点击「提取整页内容」自动识别并提取正文</span>
+                            <strong>整页提取技术博客</strong>
+                            <span>一键提取 MCP 教程、SDK 文档等整页内容，喂给 Claude 或 ChatGPT</span>
                         </div>
                     </div>
                     <div class="tip-item">
@@ -249,8 +311,8 @@
                             <path d="M6 8h.01"/>
                         </svg>
                         <div>
-                            <strong>快捷键模式</strong>
-                            <span>按 <kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> 激活，悬停高亮，点击提取</span>
+                            <strong>快捷键极速提取</strong>
+                            <span><kbd>Cmd</kbd>+<kbd>Shift</kbd>+<kbd>X</kbd> 悬停选择，秒速获取 AI Prompt 语料</span>
                         </div>
                     </div>
                 </div>
