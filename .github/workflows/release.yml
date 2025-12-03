@@ -1,0 +1,49 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create extension package
+        run: |
+          cd src/browser-extension
+          zip -r ../../snowclip-${{ steps.version.outputs.VERSION }}.zip . -x "*.DS_Store"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: SnowClip ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## SnowClip ${{ steps.version.outputs.VERSION }}
+
+            ### 安装方法
+            1. 下载 `snowclip-${{ steps.version.outputs.VERSION }}.zip`
+            2. 解压到本地文件夹
+            3. 打开 Chrome，访问 `chrome://extensions/`
+            4. 开启「开发者模式」
+            5. 点击「加载已解压的扩展程序」
+            6. 选择解压后的文件夹
+
+            ### 更新日志
+            详见 [Commits](https://github.com/${{ github.repository }}/commits/${{ steps.version.outputs.VERSION }})
+          files: snowclip-${{ steps.version.outputs.VERSION }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
