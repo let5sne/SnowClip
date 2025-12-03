@@ -1,6 +1,6 @@
-# Web2MCP
+# SnowClip (雪花剪藏)
 
-将网页内容转换为大模型友好格式的工具集。
+**SnowClip** 是一个浏览器扩展，旨在将网页内容转换为大语言模型（LLM）友好的格式（Markdown、JSON、XML）。
 
 ## 项目结构
 

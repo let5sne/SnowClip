@@ -1,140 +1,76 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LLM Content Extractor</title>
-  <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    body {
-      width: 320px;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 200px;
-    }
-    .container {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    }
-    h1 {
-      font-size: 16px;
-      color: #333;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    h1::before {
-      content: "✨";
-    }
-    .btn {
-      width: 100%;
-      padding: 12px 16px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
-    .btn:last-child {
-      margin-bottom: 0;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      color: white;
-    }
-    .btn-primary:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-    .btn-secondary {
-      background: #f5f5f5;
-      color: #333;
-    }
-    .btn-secondary:hover {
-      background: #ebebeb;
-    }
-    .format-select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #e0e0e0;
-      border-radius: 8px;
-      font-size: 14px;
-      margin-bottom: 12px;
-      background: white;
-    }
-    .status {
-      margin-top: 12px;
-      padding: 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      display: none;
-    }
-    .status.success {
-      display: block;
-      background: #e8f5e9;
-      color: #2e7d32;
-    }
-    .status.error {
-      display: block;
-      background: #ffebee;
-      color: #c62828;
-    }
-    .divider {
-      height: 1px;
-      background: #e0e0e0;
-      margin: 16px 0;
-    }
-    .tip {
-      font-size: 12px;
-      color: #888;
-      text-align: center;
-    }
-  </style>
+  <title>SnowClip</title>
+  <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
   <div class="container">
-    <h1>LLM Content Extractor</h1>
-    
-    <select id="formatSelect" class="format-select">
-      <option value="markdown">Markdown 格式</option>
-      <option value="json">JSON 结构化</option>
-      <option value="xml">XML 格式</option>
-      <option value="zip">ZIP (Markdown + 图)</option>
-    </select>
-    
+    <h1>
+      <svg class="icon-title" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L14.4 7.2L20 9.6L14.4 12L12 17.2L9.6 12L4 9.6L9.6 7.2L12 2Z" fill="url(#sparkle-gradient)" />
+        <defs>
+          <linearGradient id="sparkle-gradient" x1="12" y1="2" x2="12" y2="17.2" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#4f46e5" />
+            <stop offset="1" stop-color="#7c3aed" />
+          </linearGradient>
+        </defs>
+      </svg>
+      SnowClip
+    </h1>
+
+    <div class="format-select-wrapper">
+      <select id="formatSelect" class="format-select">
+        <option value="markdown">Markdown 格式</option>
+        <option value="json">JSON 结构化</option>
+        <option value="xml">XML 格式</option>
+        <option value="zip">ZIP (Markdown + 图)</option>
+      </select>
+    </div>
+
     <button id="selectBtn" class="btn btn-primary">
-      <span>🎯</span> 框选区域提取
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <circle cx="12" cy="12" r="6"></circle>
+        <circle cx="12" cy="12" r="2"></circle>
+      </svg>
+      框选区域提取
     </button>
-    
+
     <button id="fullPageBtn" class="btn btn-secondary">
-      <span>📄</span> 提取整页内容
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+      提取整页内容
     </button>
-    
+
     <div class="divider"></div>
-    
+
     <button id="copyLastBtn" class="btn btn-secondary">
-      <span>📋</span> 复制上次结果
+      <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+      </svg>
+      复制上次结果
     </button>
-    
+
     <div id="status" class="status"></div>
-    
+
     <p class="tip">提取后内容自动复制到剪贴板</p>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
+
 </html>

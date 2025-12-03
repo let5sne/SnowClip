@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnowClip - 纯净网页内容提取工具</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="container nav-container">
+            <div class="logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 2L14.4 7.2L20 9.6L14.4 12L12 17.2L9.6 12L4 9.6L9.6 7.2L12 2Z"
+                        fill="url(#logo-gradient)" />
+                    <defs>
+                        <linearGradient id="logo-gradient" x1="12" y1="2" x2="12" y2="17.2"
+                            gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#4f46e5" />
+                            <stop offset="1" stop-color="#7c3aed" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <span>SnowClip</span>
+            </div>
+            <div class="nav-links">
+                <a href="#features">功能</a>
+                <a href="#how-it-works">使用指南</a>
+                <a href="https://github.com/yourusername/snowclip" class="github-link" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <header class="hero">
+        <div class="container hero-container">
+            <div class="hero-content">
+                <h1>像雪花一样纯净的<br>网页内容提取工具</h1>
+                <p>一键提取网页核心内容，自动转换为 Markdown、JSON 或 XML 格式，为您的 LLM 工作流提供完美语料。</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                        </svg>
+                        安装到 Chrome
+                    </a>
+                    <a href="#features" class="btn btn-secondary">了解更多</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="browser-mockup">
+                    <div class="browser-header">
+                        <span class="dot red"></span>
+                        <span class="dot yellow"></span>
+                        <span class="dot green"></span>
+                    </div>
+                    <div class="browser-content">
+                        <!-- Placeholder for extension screenshot -->
+                        <div class="extension-preview">
+                            <div class="preview-card">
+                                <div class="card-header">
+                                    <span class="sparkle">✨</span> SnowClip
+                                </div>
+                                <div class="card-body">
+                                    <div class="fake-select">Markdown 格式</div>
+                                    <div class="fake-btn primary">🎯 框选区域提取</div>
+                                    <div class="fake-btn secondary">📄 提取整页内容</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>核心功能</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="icon-box">🎯</div>
+                    <h3>精准提取</h3>
+                    <p>支持“框选区域”和“整页提取”两种模式，智能识别正文、代码块和表格，去除广告干扰。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-box">📝</div>
+                    <h3>多格式支持</h3>
+                    <p>完美支持 Markdown、JSON、XML 等格式，直接适配 ChatGPT、Claude 等大模型输入。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="icon-box">🖼️</div>
+                    <h3>图文并茂</h3>
+                    <p>支持将网页内容连同图片一起打包为 ZIP 下载，保留完整上下文信息。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 SnowClip. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-# LLM Content Extractor
+# SnowClip (浏览器扩展)
 
 一个 Chrome 浏览器扩展，用于截取网页内容并转换为大模型友好的格式。
 
