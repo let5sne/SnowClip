@@ -485,7 +485,6 @@ function toMarkdown(content) {
     }
   }).join('\n');
 }
-
 // 转换为 XML
 function toXML(content) {
   let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<document>\n';
@@ -537,4 +536,159 @@ function escapeXML(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// 复制到剪贴板
+async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    // 降级方案
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textarea);
+  }
+}
+
+// 保存到 storage
+function saveToStorage(text) {
+  chrome.storage.local.set({ lastExtraction: text });
+}
+
+// 显示通知
+function showNotification(message) {
+  const notification = document.createElement('div');
+  notification.className = 'llm-extractor-notification';
+  notification.textContent = message;
+  document.body.appendChild(notification);
+  
+  setTimeout(() => {
+    notification.classList.add('fade-out');
+    setTimeout(() => notification.remove(), 300);
+  }, 2000);
+}
+
+// === ZIP 下载逻辑 ===
+async function handleZipDownload(content) {
+  if (!content || content.length === 0) {
+    showNotification('❌ 没有可下载的内容');
+    return;
+  }
+
+  showNotification('⏳ 正在分析图片资源...');
+  
+  // 找出所有图片
+  const images = [];
+  const processedContent = JSON.parse(JSON.stringify(content)); // 深拷贝
+  
+  // 遍历内容，收集图片并替换路径
+  let imgIndex = 0;
+  
+  function processItem(item) {
+    if (item.type === 'image') {
+      imgIndex++;
+      // 清理 URL 参数和 hash，获取扩展名
+      let ext = 'png';
+      try {
+        const urlObj = new URL(item.src);
+        const pathname = urlObj.pathname;
+        const parts = pathname.split('.');
+        if (parts.length > 1) {
+           ext = parts.pop();
+        }
+        if (ext.length > 4 || !/^[a-z0-9]+$/i.test(ext)) {
+          ext = 'png';
+        }
+      } catch(e) {
+        // 解析失败，默认 png
+      }
+
+      const filename = `image_${imgIndex}.${ext}`;
+      
+      images.push({
+        originalSrc: item.src,
+        filename: filename
+      });
+      
+      // 更新内容中的路径为相对路径
+      item.src = `images/${filename}`;
+    }
+  }
+  
+  processedContent.forEach(processItem);
+  
+  showNotification(`⏳ 正在下载 ${images.length} 张图片...`);
+  
+  // 3. 初始化 ZIP
+  const zip = new JSZip();
+  const imgFolder = zip.folder("images");
+  
+  // 4. 下载图片并添加到 ZIP
+  const downloadPromises = images.map(async (img) => {
+    try {
+      const base64Data = await fetchImageViaBackground(img.originalSrc);
+      if (base64Data) {
+        const base64Content = base64Data.split(',')[1];
+        if (base64Content) {
+            imgFolder.file(img.filename, base64Content, { base64: true });
+        }
+      }
+    } catch (err) {
+      console.warn(`Failed to download ${img.originalSrc}`, err);
+    }
+  });
+  
+  await Promise.all(downloadPromises);
+  
+  // 5. 生成 Markdown
+  const markdown = formatContent(processedContent, 'markdown');
+  zip.file("index.md", markdown);
+  
+  // 6. 生成并下载 ZIP
+  showNotification('⏳ 正在打包...');
+  try {
+    const zipContent = await zip.generateAsync({ type: "blob" });
+    const title = document.title.replace(/[\\/:*?"<>|]/g, '_') || 'export';
+    saveAs(zipContent, `${title}.zip`);
+    showNotification('✅ 下载已开始');
+  } catch (err) {
+    console.error('Zip generation failed', err);
+    showNotification('❌ 打包失败');
+  }
+}
+
+// 通过 background script 下载图片
+function fetchImageViaBackground(url) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage({ action: 'fetchImage', url: url }, (response) => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else if (response && response.success) {
+        resolve(response.data);
+      } else {
+        reject(new Error(response?.error || 'Unknown error'));
+      }
+    });
+  });
+}
+
+// 触发浏览器下载
+function saveAs(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => {
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+}
