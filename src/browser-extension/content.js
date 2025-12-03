@@ -14,17 +14,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   } else if (request.action === 'extractFullPage') {
     currentFormat = request.format || 'markdown';
     const content = extractContent(document.body);
-    const formatted = formatContent(content, currentFormat);
-    copyToClipboard(formatted);
-    saveToStorage(formatted);
+    handleOutput(content, currentFormat);
     sendResponse({ success: true });
   } else if (request.action === 'toggleElementSelection') {
     // 如果已经在选择模式，则退出
     if (isSelecting) {
       cleanup();
     } else {
-      // 默认格式或者读取存储的格式? 这里暂时用默认markdown
-      // 理想情况应该从 storage 读取，这里简化处理
       chrome.storage.local.get('format', (res) => {
         currentFormat = res.format || 'markdown';
         startElementSelectionMode();
@@ -34,6 +30,24 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
   return true;
 });
+
+// === 统一输出处理 ===
+function handleOutput(content, format) {
+  if (format === 'zip') {
+    handleZipDownload(content);
+  } else {
+    const formatted = formatContent(content, format);
+    copyToClipboard(formatted);
+    saveToStorage(formatted);
+    
+    if (currentFormat !== 'zip') {
+       // 简单的检查，避免误报
+       if (content && content.length > 0) {
+          // 这里的通知逻辑由调用者处理，或者已经统一了
+       }
+    }
+  }
+}
 
 // === 元素选择模式 ===
 let highlightBox = null;
@@ -86,11 +100,11 @@ function onElementClick(e) {
   if (lastTarget) {
     // 提取内容
     const content = extractContent(lastTarget);
-    const formatted = formatContent(content, currentFormat);
+    handleOutput(content, currentFormat);
     
-    copyToClipboard(formatted);
-    saveToStorage(formatted);
-    showNotification('✅ 元素内容已提取');
+    if (currentFormat !== 'zip') {
+      showNotification('✅ 元素内容已提取');
+    }
   }
   
   cleanup();
@@ -166,11 +180,11 @@ function onMouseUp(e) {
   if (elements.length > 0) {
     // 提取内容
     const content = extractFromElements(elements);
-    const formatted = formatContent(content, currentFormat);
+    handleOutput(content, currentFormat);
     
-    copyToClipboard(formatted);
-    saveToStorage(formatted);
-    showNotification('✅ 内容已提取并复制到剪贴板');
+    if (currentFormat !== 'zip') {
+      showNotification('✅ 内容已提取并复制到剪贴板');
+    }
   } else {
     showNotification('❌ 未选中任何内容');
   }
@@ -523,41 +537,4 @@ function escapeXML(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-}
-
-// 复制到剪贴板
-async function copyToClipboard(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-  } catch (err) {
-    // 降级方案
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-    document.execCommand('copy');
-    document.body.removeChild(textarea);
-  }
-}
-
-// 保存到 storage
-function saveToStorage(text) {
-  chrome.storage.local.set({ lastExtraction: text });
-}
-
-// 显示通知
-function showNotification(message) {
-  const notification = document.createElement('div');
-  notification.className = 'llm-extractor-notification';
-  notification.textContent = message;
-  document.body.appendChild(notification);
-  
-  setTimeout(() => {
-    notification.classList.add('fade-out');
-    setTimeout(() => notification.remove(), 300);
-  }, 2000);
-}
+    .replace(/

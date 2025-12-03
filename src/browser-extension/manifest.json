@@ -24,7 +24,7 @@
     "toggle-element-selection": {
       "suggested_key": {
         "default": "Alt+Shift+X",
-        "mac": "Alt+Shift+X"
+        "mac": "Command+Shift+X"
       },
       "description": "Toggle Element Selection Mode"
     }
@@ -32,7 +32,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["content.js"],
+      "js": ["lib/jszip.min.js", "content.js"],
       "css": ["content.css"]
     }
   ],
