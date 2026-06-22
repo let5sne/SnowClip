@@ -6,7 +6,7 @@
 
 ## 功能特点
 
-- 🎯 **精准提取**：支持“框选区域”和“整页提取”两种模式，智能去除广告和导航干扰。
+- 🎯 **精准提取**：支持三种模式——**框选区域**、**元素选择**（快捷键 `Command+Shift+X` / `Alt+Shift+X`，悬停点击单个元素）、**整页提取**，智能去除广告和导航干扰。
 - 📝 **多格式支持**：
     - **Markdown**：适合直接投喂给 ChatGPT、Claude 等。
     - **JSON**：结构化数据，适合程序处理。
@@ -31,6 +31,8 @@ SnowClip/
 ├── docs/                     # 文档
 │   ├── INSTALL.md            # 安装指南
 │   └── EXTENSION.md          # 详细功能说明
+├── test/                     # 开发自测
+│   └── extract-test.html     # extractContent 断言自测页
 ├── index.html                # 营销主页
 ├── styles.css                # 主页样式
 ├── README.md
@@ -54,8 +56,13 @@ SnowClip/
 3. **开始提取**：
     - 点击 **框选区域提取**：鼠标拖拽选择感兴趣的内容区域。
     - 点击 **提取整页内容**：自动识别并提取正文。
+    - 按快捷键 **`Command+Shift+X`**（Mac）/ **`Alt+Shift+X`**（Win/Linux）：进入元素选择模式，移动鼠标高亮目标元素，点击即提取，ESC 取消。
 4. **获取结果**：内容会自动复制到剪贴板（ZIP 模式会自动下载）。
 
-## License
+## 开发
+
+本项目无构建步骤，改完代码后在 `chrome://extensions/` 点扩展卡片上的刷新图标 ⟳ 即可热更新。
+
+提取算法 `extractContent` 为纯函数，`test/extract-test.html` 提供断言自测：直接用浏览器打开该文件即可看到 ✅/❌ 结果，覆盖段落内链接、嵌套列表、thead 表格、无表头表格、行内代码、XML 表头节点、纯文本回退等场景。修改 `content.js` 的提取或格式化逻辑后建议跑一遍。
 
 [MIT](LICENSE)

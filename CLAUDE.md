@@ -24,8 +24,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **popup.js** - 用户界面逻辑，处理按钮点击、格式选择，通过 `chrome.tabs.sendMessage` 与 content script 通信
 - **content.js** - 核心提取逻辑，包含：
   - 三种提取模式：框选（`startSelectionMode`）、元素选择（`startElementSelectionMode`）、整页
+  - 正文容器识别（`getExtractionRoot` + `SITE_ROOT_RULES`）：整页提取时按站点规则收敛到正文容器（微信/掘金/CSDN/知乎专栏/简书），避开 UI 残渣；框选/元素选择不受影响
+  - 噪声过滤（`isNoiseImage`/`isNoiseLink`）：跳过 data URI 占位图、空图片、`javascript:` 伪链接；读 `getAttribute` 而非 `.src`/`.href` 避免浏览器规范化空值为页面 URL
+  - 内联提取（`extractInlineText`/`collectListItems`）：段落/标题/列表项内保留链接/行内代码/加粗/斜体为 Markdown 语法，列表支持嵌套缩进
   - 内容提取算法（`extractContent`）：递归遍历 DOM，识别标题/段落/代码块/列表/表格/图片/链接
-  - 格式转换（`toMarkdown`、`toXML`）
+  - 格式转换（`toMarkdown`、`toXML`），表格表头感知（`header` 字段）
   - ZIP 打包逻辑（`handleZipDownload`）：图片通过 background script 代理下载
 - **background.js** - Service Worker，处理快捷键命令和图片下载代理（绕过 CORS）
 
@@ -50,6 +53,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | `popup.js` | UI 交互和消息分发 |
 | `manifest.json` | 扩展权限和配置 |
 | `lib/jszip.min.js` | ZIP 打包依赖 |
+| `test/extract-test.html` | `extractContent` 纯函数断言自测（浏览器打开即跑） |
 
 ## 开发规范
 

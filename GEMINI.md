@@ -2,64 +2,34 @@
 
 ## 项目概览
 
-**SnowClip (雪花剪藏)** 是一个纯净网页内容提取工具，旨在将网页内容转换为大语言模型（LLM）友好的格式（Markdown、JSON、XML）。它像雪花一样轻量、纯净，帮助你从混沌的网页中提取有价值的信息。
-
-它由两个主要组件组成：
-1.  **浏览器扩展：** 一个 Chrome 扩展（Manifest V3），允许用户直接从浏览器中框选并提取内容。
-2.  **Python 脚本：** 用于程序化网页抓取和内容结构化的独立脚本。
+**SnowClip (雪花剪藏)** 是一个纯净网页内容提取 Chrome 扩展，将网页内容转换为大语言模型（LLM）友好的格式（Markdown、JSON、XML、ZIP）。轻量、无构建步骤，纯 HTML/CSS/JS。
 
 ## 目录结构
 
-*   `src/browser-extension/`：Chrome 扩展的源代码。
-    *   `manifest.json`：扩展配置（Manifest V3）。
-    *   `content.js`：DOM 遍历和内容提取的核心逻辑。
-    *   `popup.html` & `popup.js`：扩展弹出窗口的用户界面。
-*   `scripts/`：实用脚本。
-    *   `mcp.py`：使用 `requests` 和 `BeautifulSoup` 获取并结构化网页内容的 Python 脚本。
-    *   `generate_icons.py`：用于生成扩展图标的辅助工具。
-*   `docs/`：文档。
-    *   `EXTENSION.md`：扩展的详细功能列表和使用说明。
-    *   `INSTALL.md`：安装指南。
+- `src/browser-extension/`：Chrome 扩展源代码（Manifest V3）。
+  - `manifest.json`：扩展配置。
+  - `content.js`：DOM 遍历与内容提取核心逻辑。
+  - `background.js`：Service Worker，快捷键监听 + 图片下载代理（绕过 CORS）。
+  - `popup.html` / `popup.js`：扩展弹窗界面与交互。
+  - `lib/jszip.min.js`：ZIP 打包依赖。
+- `test/extract-test.html`：`extractContent` 纯函数断言自测页。
+- `docs/`：文档（`EXTENSION.md` 功能说明、`INSTALL.md` 安装指南）。
+- `index.html` / `styles.css`：营销主页。
 
 ## 构建与运行
 
-### 浏览器扩展
-
-该扩展不需要构建步骤（无 webpack/bundler）。它作为原始源码扩展运行。
-
-1.  **在 Chrome 中加载：**
-    *   访问 `chrome://extensions/`。
-    *   启用“开发者模式”。
-    *   点击“加载已解压的扩展程序”并选择 `src/browser-extension` 目录。
-
-### Python 脚本
-
-**先决条件：**
-*   Python 3.x
-*   依赖项：`requests`，`beautifulsoup4`
-
-**安装：**
-```bash
-pip install requests beautifulsoup4
-```
-
-**用法：**
-```bash
-# 运行抓取脚本（当前目标为硬编码的 URL）
-python scripts/mcp.py
-```
+无构建步骤。在 Chrome 加载 `src/browser-extension` 目录即可（`chrome://extensions/` → 开发者模式 → 加载已解压扩展）。改代码后点扩展卡片刷新图标热更新。
 
 ## 主要功能
 
-*   **内容提取：** 支持标题、段落、代码块、列表、表格、图片和链接。
-*   **格式：** 导出为 Markdown、JSON 和 XML。
-*   **交互：**
-    *   **扩展：** 支持“区域框选”（拖动选择）和“整页”提取。自动复制到剪贴板。
-    *   **脚本：** 获取 HTML 并将其解析为结构化的 JSON 文件（默认为 `wechat_dev_seo_structured.json`）。
+- **三种提取模式**：区域框选、元素选择（快捷键）、整页提取。
+- **正文容器识别**：整页提取时针对微信公众号、掘金、CSDN、知乎专栏、简书自动收敛到正文容器，避开 UI 残渣。
+- **噪声过滤**：跳过占位图片（data URI SVG / 1×1 透明图）、空图片、`javascript:` 伪链接、空链接。
+- **格式**：Markdown、JSON、XML、ZIP（含本地化图片）。
+- **内联保留**：段落/标题/列表项内的链接、行内代码、加粗、斜体以 Markdown 语法保留；列表支持嵌套缩进；表格识别 `<thead>`。
 
 ## 开发规范
 
-*   **扩展架构：** 使用标准 Web 技术（HTML/CSS/JS），无需框架。
-*   **Manifest 版本：** 严格遵循 V3。
-*   **Python 风格：** 遵循标准 Python 脚本实践。
-*   **文档：** 在 `docs/` 文件夹中维护文档；`README.md` 作为项目入口点。
+- Manifest V3（service worker）。
+- 无框架，纯 HTML/CSS/JS，中文 UI 与注释。
+- 文档维护在 `docs/`，`README.md` 为项目入口。

@@ -1,4 +1,4 @@
-# LLM Content Extractor 离线安装指南
+# SnowClip 离线安装指南
 
 ## 系统要求
 
@@ -11,8 +11,8 @@
 
 1. **下载项目**
    ```bash
-   git clone git@git.let5see.xyz:let5see/web2mcp.git
-   cd web2mcp
+   git clone <仓库地址>
+   cd SnowClip
    ```
 
 2. **打开扩展管理页面**
@@ -61,9 +61,12 @@
 src/browser-extension/
 ├── manifest.json    # 扩展配置（权限、入口等）
 ├── popup.html       # 弹出窗口界面
+├── popup.css        # 弹窗样式
 ├── popup.js         # 弹出窗口逻辑
-├── content.js       # 注入页面的内容脚本
-├── content.css      # 框选样式
+├── content.js       # 注入页面的内容提取脚本
+├── content.css      # 框选/高亮/通知样式
+├── background.js    # Service Worker（快捷键 + 图片下载代理）
+├── lib/jszip.min.js # ZIP 打包依赖
 └── icons/           # 图标文件
     ├── icon.svg     # 矢量源文件
     ├── icon16.png   # 16x16 图标
