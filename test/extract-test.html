@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>SnowClip extractContent 自测</title>
+  <style>
+    body { font-family: -apple-system, sans-serif; padding: 24px; background: #0f172a; color: #e2e8f0; }
+    .pass { color: #4ade80; }
+    .fail { color: #f87171; }
+    pre { background: #1e293b; padding: 12px; border-radius: 6px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>extractContent 自测</h1>
+  <div id="results"></div>
+
+  <!-- stub chrome，让 content.js 可在普通页面加载 -->
+  <script>
+    window.chrome = {
+      runtime: { onMessage: { addListener: () => {} }, sendMessage: () => {}, lastError: null },
+      storage: { local: { get: () => {}, set: () => {} } }
+    };
+  </script>
+  <script src="../src/browser-extension/content.js"></script>
+  <script>
+    const log = document.getElementById('results');
+    let passed = 0, failed = 0;
+
+    function assert(name, cond, detail) {
+      const line = document.createElement('div');
+      line.className = cond ? 'pass' : 'fail';
+      line.textContent = (cond ? '✅ PASS ' : '❌ FAIL ') + name;
+      log.appendChild(line);
+      if (!cond && detail) {
+        const pre = document.createElement('pre');
+        pre.textContent = detail;
+        log.appendChild(pre);
+      }
+      cond ? passed++ : failed++;
+    }
+
+    function fixture(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      return div;
+    }
+
+    // 1. 段落内的链接应保留为 [text](href)
+    {
+      const root = fixture('<p>访问 <a href="https://example.com">示例</a> 站点</p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('段落内链接保留', /\[示例\]\(https:\/\/example\.com\/?\)/.test(md), md);
+    }
+
+    // 2. 嵌套列表应缩进
+    {
+      const root = fixture('<ul><li>顶层<ul><li>子项</li></ul></li><li>另一项</li></ul>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('嵌套列表缩进', md.includes('- 顶层\n  - 子项') && md.includes('- 另一项'), md);
+    }
+
+    // 3. 有 thead 的表格应输出分隔行
+    {
+      const root = fixture('<table><thead><tr><th>名字</th></tr></thead><tbody><tr><td>张三</td></tr></tbody></table>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('thead 表格有分隔行', md.includes('| 名字 |') && md.includes('| --- |') && md.includes('| 张三 |'), md);
+    }
+
+    // 4. 无 thead 的表格不应把首行当表头
+    {
+      const root = fixture('<table><tr><td>A</td></tr><tr><td>B</td></tr></table>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('无 thead 表格无分隔行', !md.includes('---') && md.includes('| A |') && md.includes('| B |'), md);
+    }
+
+    // 5. 行内代码保留
+    {
+      const root = fixture('<p>用 <code>console.log</code> 调试</p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('行内代码保留', md.includes('`console.log`'), md);
+    }
+
+    // 6. XML 表格输出 header 节点
+    {
+      const root = fixture('<table><thead><tr><th>H</th></tr></thead><tbody><tr><td>D</td></tr></tbody></table>');
+      const xml = formatContent(extractContent(root), 'xml');
+      assert('XML 表格 header 节点', xml.includes('<header>') && xml.includes('<row index="0">'), xml);
+    }
+
+    // 噪声过滤
+    {
+      const root = fixture('<p>前 <img src=""> 后</p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('空 src 图片被过滤', !md.includes('![]'), md);
+    }
+    {
+      const root = fixture('<p><img alt="图片" src="data:image/svg+xml,%3Csvg%3E%3C/svg%3E"></p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('data SVG 占位图被过滤', !md.includes('data:image/svg+xml'), md);
+    }
+    {
+      const root = fixture('<p><a href="javascript:void(0);">按钮</a></p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('javascript 伪链接降级为纯文本', !md.includes('[按钮]') && md.includes('按钮'), md);
+    }
+    {
+      const root = fixture('<p><a href="">空链接</a></p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('空 href 链接降级为纯文本', !md.includes('[空链接]') && md.includes('空链接'), md);
+    }
+    {
+      const root = fixture('<p><img alt="封面" src="https://example.com/a.jpg"></p>');
+      const md = formatContent(extractContent(root), 'markdown');
+      assert('正常图片保留', md.includes('![封面](https://example.com/a.jpg)'), md);
+    }
+
+    const summary = document.createElement('h3');
+    summary.className = failed ? 'fail' : 'pass';
+    summary.textContent = `结果：${passed} 通过 / ${failed} 失败`;
+    log.insertBefore(summary, log.firstChild);
+  </script>
+</body>
+</html>

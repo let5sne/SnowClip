@@ -13,7 +13,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse({ success: true });
   } else if (request.action === 'extractFullPage') {
     currentFormat = request.format || 'markdown';
-    const content = extractContent(document.body);
+    const root = getExtractionRoot();
+    const content = extractContent(root);
     handleOutput(content, currentFormat);
     sendResponse({ success: true });
   } else if (request.action === 'toggleElementSelection') {
@@ -31,6 +32,52 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true;
 });
 
+// 站点正文容器规则：hostname 后缀 → 正文容器选择器数组（按优先级，命中即用）
+// ponytail: 仅对整页提取生效，框选/元素选择仍尊重用户手动范围
+const SITE_ROOT_RULES = [
+  { host: 'mp.weixin.qq.com', selectors: ['#js_content'] },                    // 微信公众号
+  { host: 'blog.csdn.net', selectors: ['#article_content', 'article'] },       // CSDN 博客
+  { host: 'juejin.cn', selectors: ['#article-root', 'article.article'] },      // 掘金文章
+  { host: 'zhuanlan.zhihu.com', selectors: ['.Post-RichTextContainer', 'article'] }, // 知乎专栏
+  { host: 'www.jianshu.com', selectors: ['article'] },                         // 简书
+];
+
+// 识别正文容器，避开站点 UI 残渣；未命中规则时回退 document.body
+function getExtractionRoot() {
+  const host = location.hostname;
+  for (const rule of SITE_ROOT_RULES) {
+    if (host === rule.host || host.endsWith('.' + rule.host)) {
+      for (const sel of rule.selectors) {
+        const el = document.querySelector(sel);
+        if (el) return el;
+      }
+    }
+  }
+  return document.body;
+}
+
+// 判定噪声图片：无 src、空 src、data: 内联占位图（1×1 SVG / 透明像素）
+function isNoiseImage(el) {
+  // 读原始属性，避免浏览器把空 src 规范化成页面 URL
+  const rawSrc = (el.getAttribute('src') || '').trim();
+  if (!rawSrc) return true;
+  const src = el.src.trim();
+  if (src.startsWith('data:')) {
+    if (src.startsWith('data:image/svg+xml')) return true;
+    // 1x1 透明 GIF / PNG 的常见 base64 头
+    if (/data:image\/(gif|png);base64,R0lGODlhAQABAIAAAAAAAP|data:image\/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB/.test(src)) return true;
+  }
+  return false;
+}
+
+// 判定噪声链接：无 href、javascript: 伪协议
+function isNoiseLink(el) {
+  const rawHref = (el.getAttribute('href') || '').trim();
+  if (!rawHref) return true;
+  if (rawHref.toLowerCase().startsWith('javascript:')) return true;
+  return false;
+}
+
 // === 统一输出处理 ===
 function handleOutput(content, format) {
   if (format === 'zip') {
@@ -39,13 +86,6 @@ function handleOutput(content, format) {
     const formatted = formatContent(content, format);
     copyToClipboard(formatted);
     saveToStorage(formatted);
-    
-    if (currentFormat !== 'zip') {
-       // 简单的检查，避免误报
-       if (content && content.length > 0) {
-          // 这里的通知逻辑由调用者处理，或者已经统一了
-       }
-    }
   }
 }
 
@@ -300,6 +340,75 @@ function extractFromElements(elements) {
   return content;
 }
 
+// 从元素的子节点提取内联文本，保留链接/加粗/斜体/行内代码/图片为 Markdown 语法
+function extractInlineText(parent) {
+  let result = '';
+  parent.childNodes.forEach(node => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      result += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName.toLowerCase();
+      if (tag === 'br') {
+        result += ' ';
+      } else if (tag === 'a') {
+        if (isNoiseLink(node)) return;
+        const text = extractInlineText(node).trim();
+        if (text) {
+          result += node.href ? `[${text}](${node.href})` : text;
+        }
+      } else if (tag === 'code') {
+        result += '`' + node.textContent + '`';
+      } else if (tag === 'strong' || tag === 'b') {
+        const inner = extractInlineText(node).trim();
+        if (inner) result += `**${inner}**`;
+      } else if (tag === 'em' || tag === 'i') {
+        const inner = extractInlineText(node).trim();
+        if (inner) result += `*${inner}*`;
+      } else if (tag === 'img') {
+        if (isNoiseImage(node)) return;
+        result += `![${node.alt || ''}](${node.src})`;
+      } else if (tag === 'ul' || tag === 'ol') {
+        const items = collectListItems(node, tag === 'ol', 0);
+        if (items.length) result += '\n' + items.join('\n') + '\n';
+      } else if (['script', 'style', 'noscript', 'iframe', 'svg'].includes(tag)) {
+        // 跳过
+      } else {
+        result += extractInlineText(node);
+      }
+    }
+  });
+  return result;
+}
+
+// 递归收集列表项，嵌套列表以缩进表示，返回已含前缀的格式化字符串数组
+function collectListItems(listEl, ordered, depth) {
+  const items = [];
+  const indent = '  '.repeat(depth);
+  let i = 0;
+  Array.from(listEl.querySelectorAll(':scope > li')).forEach(li => {
+    i++;
+    const nested = [];
+    const inlineNodes = [];
+    Array.from(li.childNodes).forEach(node => {
+      if (node.nodeType === Node.ELEMENT_NODE && ['ul', 'ol'].includes(node.tagName.toLowerCase())) {
+        nested.push(node);
+      } else {
+        inlineNodes.push(node);
+      }
+    });
+    // 用临时容器包裹内联节点再提取，避免改动原 DOM
+    const wrapper = document.createElement('div');
+    inlineNodes.forEach(n => wrapper.appendChild(n.cloneNode(true)));
+    const text = extractInlineText(wrapper).trim();
+    const prefix = ordered ? `${i}. ` : '- ';
+    if (text) items.push(indent + prefix + text);
+    nested.forEach(nl => {
+      items.push(...collectListItems(nl, nl.tagName.toLowerCase() === 'ol', depth + 1));
+    });
+  });
+  return items;
+}
+
 // 提取内容
 function extractContent(root) {
   const content = [];
@@ -317,18 +426,21 @@ function extractContent(root) {
     
     // 标题
     if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
-      processed.add(el);
-      content.push({
-        type: 'heading',
-        level: parseInt(tagName[1]),
-        content: el.textContent.trim()
-      });
+      const text = extractInlineText(el).trim();
+      if (text) {
+        processed.add(el);
+        content.push({
+          type: 'heading',
+          level: parseInt(tagName[1]),
+          content: text
+        });
+      }
       return;
     }
-    
+
     // 段落
     if (tagName === 'p') {
-      const text = el.textContent.trim();
+      const text = extractInlineText(el).trim();
       if (text) {
         processed.add(el);
         content.push({
@@ -357,9 +469,7 @@ function extractContent(root) {
     // 列表
     if (tagName === 'ul' || tagName === 'ol') {
       processed.add(el);
-      const items = Array.from(el.querySelectorAll(':scope > li'))
-        .map(li => li.textContent.trim())
-        .filter(Boolean);
+      const items = collectListItems(el, tagName === 'ol', 0);
       if (items.length) {
         content.push({
           type: 'list',
@@ -369,18 +479,32 @@ function extractContent(root) {
       }
       return;
     }
-    
+
     // 表格
     if (tagName === 'table') {
       processed.add(el);
-      const rows = Array.from(el.querySelectorAll('tr')).map(tr => {
-        return Array.from(tr.querySelectorAll('th, td'))
-          .map(cell => cell.textContent.trim());
+      const headerCells = [];
+      const bodyRows = [];
+      // ponytail: querySelectorAll('tr') 也会抓到嵌套表格的行，忽略此边缘情况
+      const allRows = Array.from(el.querySelectorAll('tr'));
+      let headerDone = false;
+      allRows.forEach(tr => {
+        const cells = Array.from(tr.children).filter(c => c.tagName === 'TD' || c.tagName === 'TH');
+        if (cells.length === 0) return;
+        const isHeader = cells.every(c => c.tagName === 'TH');
+        const texts = cells.map(c => extractInlineText(c).trim());
+        if (isHeader && !headerDone) {
+          texts.forEach(t => headerCells.push(t));
+        } else {
+          headerDone = true;
+          bodyRows.push(texts);
+        }
       });
-      if (rows.length) {
+      if (headerCells.length || bodyRows.length) {
         content.push({
           type: 'table',
-          rows: rows
+          header: headerCells.length ? headerCells : null,
+          rows: bodyRows
         });
       }
       return;
@@ -389,6 +513,7 @@ function extractContent(root) {
     // 图片
     if (tagName === 'img') {
       processed.add(el);
+      if (isNoiseImage(el)) return;
       content.push({
         type: 'image',
         src: el.src,
@@ -396,10 +521,11 @@ function extractContent(root) {
       });
       return;
     }
-    
+
     // 链接
     if (tagName === 'a') {
       processed.add(el);
+      if (isNoiseLink(el)) return;
       const text = el.textContent.trim();
       if (text) {
         content.push({
@@ -460,19 +586,20 @@ function toMarkdown(content) {
         return '```' + lang + '\n' + item.content + '\n```\n';
       
       case 'list':
-        return item.items.map((text, i) => {
-          const prefix = item.ordered ? `${i + 1}. ` : '- ';
-          return prefix + text;
-        }).join('\n') + '\n';
-      
-      case 'table':
-        if (item.rows.length === 0) return '';
-        const header = '| ' + item.rows[0].join(' | ') + ' |';
-        const separator = '| ' + item.rows[0].map(() => '---').join(' | ') + ' |';
-        const body = item.rows.slice(1)
-          .map(row => '| ' + row.join(' | ') + ' |')
-          .join('\n');
-        return [header, separator, body].filter(Boolean).join('\n') + '\n';
+        return item.items.join('\n') + '\n';
+
+      case 'table': {
+        if (!item.rows.length && !item.header) return '';
+        const lines = [];
+        if (item.header && item.header.length) {
+          lines.push('| ' + item.header.join(' | ') + ' |');
+          lines.push('| ' + item.header.map(() => '---').join(' | ') + ' |');
+        }
+        item.rows.forEach(row => {
+          lines.push('| ' + row.join(' | ') + ' |');
+        });
+        return lines.join('\n') + '\n';
+      }
       
       case 'image':
         return `![${item.alt}](${item.src})\n`;
@@ -509,6 +636,13 @@ function toXML(content) {
         break;
       case 'table':
         xml += '  <table>\n';
+        if (item.header && item.header.length) {
+          xml += '    <header>\n';
+          item.header.forEach((cell, j) => {
+            xml += `      <cell index="${j}">${escapeXML(cell)}</cell>\n`;
+          });
+          xml += '    </header>\n';
+        }
         item.rows.forEach((row, i) => {
           xml += `    <row index="${i}">\n`;
           row.forEach((cell, j) => {
